@@ -45,6 +45,9 @@ require(lattice)
 \thispagestyle{empty}
 \listoffigures
 \newpage
+\thispagestyle{empty}
+\listoftables
+\newpage
 ```
 
 ```{=tex}
@@ -69,130 +72,121 @@ Esta base de datos es de un experimento que busca medir tiempo promedio que se t
 ```{r echo=F}
 # lectura base de datos
 df <- read_excel("Datos_Experimento_Tiempo_Pasos.xlsx")
-kable(head(df), booktabs = T, align = "c", linesep = "") %>% 
+kable(head(df), booktabs = T, align = "c", linesep = "", caption = "Datos formato ancho") %>% 
   kable_styling(latex_options = "HOLD_position")
 ```
 
-Para ello, note que tenemos los datos generados por formato ancho, para transformarlos en datos largos se realiza lo siguiente:
+Para esta tarea, se procede a utilizar la función `pivot_longer()` del paquete `dplyr` con la cual se obtiene el siguiente resultado:
 
-```{r}
+```{r, echo = F}
 df <- pivot_longer(data = df, cols = c(3:5), names_to = "Experimento",
                    values_to = "Tiempo")
 ```
 
 ```{r echo=F}
-kable(head(df, 12), booktabs = T, align = "c", linesep = "") %>% 
+kable(head(df, 12), booktabs = T, align = "c", linesep = "", caption = "Datos formato largo") %>% 
   kable_styling(latex_options = "HOLD_position")
 ```
 
-\section{Ejercicios 2 y 5}
+\section{Ejercicio 2}
 
-**2)** Calcule estadísticos de resumen de acuerdo a la variable género
+Calcule estadísticos de resumen de acuerdo a la variable género
 y a la variable tiempo. Interprete. 
 
-**5)** Obtenga boxplots de acuerdo al tiempo y al género. Interprete.
-
 **Solución**
+ 
+Se presentan algunos estadísticos de resumen en las siguientes tablas:
 
-\subsection{Boxplot}
+```{r, echo = F}
 
-```{r}
-# Se define un vector de colores
-colores = c("#69b3a2", "#404080")
+#Por género
+media_global_hombres <- df %>% filter(Genero == "M") %>% 
+  select(Tiempo) %>% unlist() %>% mean() %>% round(4)
 
-ggplot( data = df, aes(x = Genero, y = Tiempo, fill = Genero))+
-  geom_boxplot(alpha =0.35, # saturacion color
-               size = 1) +
-  stat_summary(fun = mean, geom = "point", shape = 20, size = 4, color = "red") +
-  scale_fill_manual(values = colores)+
-  labs(x = "Genero", y = "Tiempo", title = "Distribucion del tiempo por genero")+
-  theme_bw() +
-  theme(axis.text = element_text(color = "black", size = 12, face = "bold"), 
-        axis.title = element_text(color = "black", size = 14, face = "bold"),
-        plot.title = element_text(color = "black", size = 16, face = "bold")) +
-  guides(fill = guide_legend(title = "Genero", ncol = 1))
-```
+media_global_mujeres <- df %>% filter(Genero == "F") %>% 
+  select(Tiempo) %>% unlist() %>% mean() %>% round(4)
 
+sd_global_hombres <- df %>% filter(Genero == "M") %>% 
+  select(Tiempo) %>% unlist() %>% sd() %>% round(4)
 
-De manera muy rápida, se puede identificar que los valores promedio para cada uno de los participantes se difiere por género. 
+sd_global_mujeres <- df %>% filter(Genero == "F") %>% 
+  select(Tiempo) %>% unlist() %>% sd() %>% round(4)
 
-Suponga F es Femenino y M masculino. Para este caso se tiene entonces que los hombres terminan el proceso ligeramente más rápido que las mujeres.
+max_global_hombres <- df %>% filter(Genero == "M") %>% 
+  select(Tiempo) %>% unlist() %>% max() %>% round(4)
 
-Esto se evidencia en el grafico donde las medias de ambos procesos (punto rojo dentro de los respectivos boxplots) se encuentran ligeramente una por encima de la otra. Esto también se evidencia al ver que una de las cajas esta más encima que la otra (Sin solaparse mucho)
+max_global_mujeres <- df %>% filter(Genero == "F") %>% 
+  select(Tiempo) %>% unlist() %>% max() %>% round(4)
 
-Este grafico analiza la variable en función de la muestra tomada. Un buen ejercicio seria analizar cómo se categorizan los datos dada las observaciones. A continuación se presenta dicho analisís. 
+min_global_hombres <- df %>% filter(Genero == "M") %>% 
+  select(Tiempo) %>% unlist() %>% min() %>% round(4)
 
+min_global_mujeres <- df %>% filter(Genero == "F") %>% 
+  select(Tiempo) %>% unlist() %>% min() %>% round(4)
 
-```{r}
-ggplot(df, aes(x = Experimento, y = Tiempo, fill = Genero)) +
-  geom_boxplot() +
-  labs(title = "Tiempo por Experimento y Género",
-       x = "Experimento",
-       y = "Tiempo") +
-  theme_bw() +
-  theme(plot.title = element_text(hjust = 0.5, size = 16),
-        axis.text = element_text(size = 12),
-        axis.title = element_text(size = 14),
-        legend.title = element_text(size = 14),
-        legend.text = element_text(size = 12))
-```
+#Por tiempo
+media_global_t1 <- df %>% filter(Experimento == "T1") %>% 
+  select(Tiempo) %>% unlist() %>% mean() %>% round(4)
 
+media_global_t2 <- df %>% filter(Experimento == "T2") %>% 
+  select(Tiempo) %>% unlist() %>% mean() %>% round(4)
 
-Nuevamente, la apreciación se mantiene. Existe la intución de que la media en general, de las mujeres para cada experimento fue ligeramente mayor que la de los hombres. Lo que se traduce en que estas tardan más en recorrer los 35 metros.
+media_global_t3 <- df %>% filter(Experimento == "T3") %>% 
+  select(Tiempo) %>% unlist() %>% mean() %>% round(4)
 
-\subsection{Density plot}
+sd_global_t1 <- df %>% filter(Experimento == "T1") %>% 
+  select(Tiempo) %>% unlist() %>% sd() %>% round(4)
 
-```{r}
-mean.data=  aggregate(x = df$Tiempo, by = list(df$Genero), FUN= mean)
+sd_global_t2 <- df %>% filter(Experimento == "T2") %>% 
+  select(Tiempo) %>% unlist() %>% sd() %>% round(4)
 
-names(mean.data) = (c("Genero", "tiempo"))
-  
-  
-p2 <- ggplot(data=df, aes(x=Tiempo, group=Genero, fill=Genero)) +
-    geom_density(adjust=1.5, alpha=.4) + 
-  geom_vline(data = mean.data, aes(xintercept =tiempo, color = Genero), linetype = "dashed") +
-  scale_color_manual(values = c("red", "blue","blue")) +
-  theme_bw()
-p2
-```
+sd_global_t3 <- df %>% filter(Experimento == "T3") %>% 
+  select(Tiempo) %>% unlist() %>% sd() %>% round(4)
 
-La dendisad del tiempo por genero parece normal en cada caso. Aunque para las mujeres (F) parece mas irregular. Nuevamente, mire que la curva de densidad de las mujeres esta mas a la derecha, junto con la media del proceso. Esto es nuevamente una sospecha de que para cada grupo (Sin categorizar por muestras en el tiempo) se tiene procesos de medias diferentes. 
+max_global_t1 <- df %>% filter(Experimento == "T1") %>% 
+  select(Tiempo) %>% unlist() %>% max() %>% round(4)
 
-\subsection{Comparacion de medias}
+max_global_t2 <- df %>% filter(Experimento == "T2") %>% 
+  select(Tiempo) %>% unlist() %>% max() %>% round(4)
 
-Se procede a realizar una comparacion de medias para ver de manera descriptiva si en efecto, dichos procesos tienen medias diferentes. 
+max_global_t3 <- df %>% filter(Experimento == "T3") %>% 
+  select(Tiempo) %>% unlist() %>% max() %>% round(4)
 
-```{r echo=F}
-kable(mean.data, booktabs = T, align = "c") %>% 
+min_global_t1 <- df %>% filter(Experimento == "T1") %>% 
+  select(Tiempo) %>% unlist() %>% min() %>% round(4)
+
+min_global_t2 <- df %>% filter(Experimento == "T2") %>% 
+  select(Tiempo) %>% unlist() %>% min() %>% round(4)
+
+min_global_t3 <- df %>% filter(Experimento == "T3") %>% 
+  select(Tiempo) %>% unlist() %>% min() %>% round(4)
+
+est_resumen_genero <- data.frame(Minimo = c(min_global_hombres,min_global_mujeres),
+                                 Media = c(media_global_hombres,media_global_mujeres),
+                                 Desviacion = c(sd_global_hombres,sd_global_mujeres),
+                                 Maximo = c(max_global_hombres,max_global_mujeres),
+                                 row.names = c("Masculino", "Femenino"))
+
+est_resumen_temp <- data.frame(Minimo = c(min_global_t1,min_global_t2,min_global_t3),
+                               Media = c(media_global_t1,media_global_t2,media_global_t3),
+                               Desviacion = c(sd_global_t1,sd_global_t2,sd_global_t3),
+                               Maximo = c(max_global_t1,max_global_t2,max_global_t3),
+                               row.names = c("Tiempo 1", "Tiempo 2", "Tiempo 3"))
+
+kable(est_resumen_genero, caption = "Estadísticos de resumen por género", 
+      booktabs = T, align = "c", linesep = "", 
+      col.names = c("Mínimo", "Media", "Desviación", "Máximo")) %>% 
+  kable_styling(latex_options = "HOLD_position")
+
+kable(est_resumen_temp, caption = "Estadísticos de resumen por tiempos", 
+      booktabs = T, align = "c", linesep = "", 
+      col.names = c("Mínimo", "Media", "Desviación", "Máximo")) %>% 
   kable_styling(latex_options = "HOLD_position")
 ```
 
-Lo anterior representa la media individual para cada grupo. Con esto en mente; intentemos realizar una prueba de diferencia de medias.
+De los estadísticos de resumen por género se puede apreciar inicialmente que el récord entre los hombres aparenta ser menor que el tiempo mínimo registrado por las mujeres; adicionalmente se nota que en promedio los hombres fueron al menos tres segundos más rápidos y según su desviación estándar, dichos tiempos fueron más consistentes. De acuerdo al máximo, el hombre más lento fué más rápido que la mujer más lenta.
 
-```{r}
-df <- df %>% as.data.frame()
-df.M <- df[df$Genero == "M", ] 
-df.M <- df.M$Tiempo
-df.F <- df[df$Genero == "F", ] 
-df.F <- df.F$Tiempo
-test <- t.test(x = df.M, y = df.F) 
-test
-```
-
-Como indica el test, claramente se tienen medias diferentes para ambos procesos. Con esto en mente, podemos entender entones que ambos grupos tienen medias diferentes, lo que nuevamente, es un indicio de que lass recorren los 35 metros del experimento ligeramente mas lento que los hombres.
-
-\subsection{Ridgeplot}
-
-```{r message=F}
-ggplot(df, aes(x = Tiempo, y = Genero, fill = Genero)) +
-  geom_density_ridges() +
-  theme_ridges() + 
-  theme(legend.position = "none")+
-  labs(title = "Densidad por genero", x = "Tiempo", y = "Genero")
-```
-
-Siguen habiendo las mismas conclusiones. Ahora, recuerde que el parametro de suavizado podria afectar el comportamiendo de la "forma" de un density plot. Para este caso, vemos que las mujeres parecen tener dos modas. Ahora, en cualquier caso se observa que los datos de las mujeres se encuentran ligeramente mas hacia la derecha. Esto implica, nuevamente, que estas medias son diferentes y; a su vez, los valores de una es mayor que la otra (respectivamente; F > M).
-
+En lo que respecta a los tiempos, se puede notar que conforme se fueron haciendo las "corridas del experimento" los tiempos fueron mejorando a lo largo de las tres etapas, tanto el mínimo como la media y el máximo mostraron dicho comportamiento en los 3 tiempos. Adicionalmente, según la desviación se puede apreciar que conforme los participantes iban "calentando" sus tiempos fueron algo menos dispersos.
 
 \section{Ejercicio 3}
 
@@ -202,36 +196,29 @@ Obtenga un grafico de linea para cada sujeto.
 
 Se procede a graficar cada sujeto con su respectiva observacion en el tiempo.
 
-```{r}
-ggplot(df,aes(x = Experimento, y = Tiempo, group = ID, color=factor(ID))) +
-  geom_point() +
-  geom_line() +
-  theme_bw()
-```
-
-```{r warning=F}
+```{r warning=F, echo = F, fig.cap="Gráfico de líneas para cada sujeto"}
 ggplot(df, aes(x = Experimento, y = Tiempo, group = ID, color = factor(ID))) +
   geom_point() +
   geom_line() +
   guides(color = FALSE) +
   theme(legend.position = "none")+
-  labs(title = "Grafico de lineas para cada sujeto") +
+  labs(title = "Gráfico de líneas para cada sujeto") +
   theme_bw()
 ```
 
-En general, parece que el intercepto y pendiente de estos sujetos parece ser aleatorio. ¿Que tal si categorizamos por genero?
+De este gráfico se puede notar que en general, dadas las diferentes alturas de las líneas, se puede pensar en incluír un intercepto aleatorio en un modelo futuro. Adicionalmente, según los cruces de las líneas se podría pensar que un modelo tentativo debe incluír además una pendiente aleatoria.
 
-```{r}
+Para apreciar el comportamiento de ambos géneros se plantea el siguiente gráfico de líneas:
+
+```{r, echo = F, fig.cap="Gráfico de spaguetti categorizado por género"}
 ggplot(df, aes(x = Experimento, y = Tiempo, group = ID, color = Genero)) +
   geom_point() +
   geom_line()  +
-  labs(title = "Grafico Spaguetti categorizado por genero") +
+  labs(title = "Gráfico de spaguetti categorizado por género") +
   theme_bw()
 ```
 
-Ahora, con estos graficos se evidencia que en general, el proceso de los hombres (M) se encuentra ligeraente por debajo que el de las mujeres.
-
-**Nota:** Aparentemente, se tiene intercepto y pendiente aleatorias.
+De este se puede apreciar que, el tiempo de los hombres es menor que el de una porción mujeres, es decir, se puede pensar que en el estudio hay dos grupos de mujeres, aquellas que son notablemente más lentas y otras que se asemejan e incluso superan en algunos casos a los hombres.
 
 \section{Ejercicio 4} 
 
@@ -239,16 +226,7 @@ Otenga un grafico de rejilla (Trellis plot) con una linea superpuesta para cada 
 
 **Solución**
 
-```{r fig.height=6, fig.width=6}
-ggplot(df, aes(x = Experimento, y = Tiempo, group = ID)) +
-  geom_line(aes(color = factor(ID)), show.legend = F) +
-  geom_point(aes(color = factor(ID)), show.legend = F) +
-  facet_wrap(~ID) +
-  theme_bw()
-```
-
-
-```{r fig.height=6, fig.width=6}
+```{r fig.height=6, fig.width=6, echo = F, fig.cap="Gráfico de rejilla"}
 ggplot(df, aes(x = Experimento, y = Tiempo, group = ID)) +
   geom_line(aes(color = factor(Genero))) +
   geom_point(aes(color = factor(Genero)), show.legend = F) +
@@ -257,19 +235,81 @@ ggplot(df, aes(x = Experimento, y = Tiempo, group = ID)) +
   theme_bw()
 ```
 
+De este gráfico se puede ver que, las mujeres 4, 5, 9 y 10 son aquellas que registran los tiempos más altos y que en consecuencia, podrían estar desplazando la media de los tiempos de su género hacia la derecha en comparación a la media global de los hombres. El caso contrario se aprecia con los hombres 13 y 14 los cuales registran un menor tiempo en hacer el recorrido. Según este gráfico podría pensarse que los tiempos de los masculinos se encuentran más centrados hacia un valor particular.
+
+\section{Ejercicio 5} 
+
+Obtenga boxplots de acuerdo al tiempo y al género. Interprete.
+
+**Solución**
+
+```{r, echo = F, fig.cap="Boxplot Género vs Tiempo"}
+colores = c("#69b3a2", "#404080")
+
+ggplot( data = df, aes(x = Genero, y = Tiempo, fill = Genero))+
+  geom_boxplot(alpha =0.35,
+               size = 1) +
+  stat_summary(fun = mean, geom = "point", shape = 20, size = 4, color = "red") +
+  scale_fill_manual(values = colores)+
+  labs(x = "Género", y = "Tiempo", title = "Boxplot Género vs Tiempo")+
+  theme_bw() +
+  theme(axis.text = element_text(color = "black", size = 12, face = "bold"), 
+        axis.title = element_text(color = "black", size = 14, face = "bold"),
+        plot.title = element_text(color = "black", size = 16, face = "bold")) +
+  guides(fill = guide_legend(title = "Género", ncol = 1))
+```
+
+De este gráfico se puede concluír inicialmente que sí parece haber una diferencia plausible entre los tiempos de los hombres y las mujeres, particularmente hablando se nota que en promedio los hombres son más rápidos que las mujeres; adicionalmente se reafirma lo obtenido en los estadísticos de resumen, pues acá las mujeres muestran una mayor dispersión que los hombres lo cual es congruente con lo concluído según la desviación estándar de ambos grupos.
+
+```{r, echo = F, fig.cap="Boxplot Experimento vs Tiempo"}
+ggplot(data = df, aes(x = Experimento, y = Tiempo, fill = Experimento))+
+  geom_boxplot(alpha =0.35,
+               size = 1) +
+  stat_summary(fun = mean, geom = "point", shape = 20, size = 4, color = "red") +
+  labs(x = "Experimento", y = "Tiempo", title = "Boxplot Experimento vs Tiempo")+
+  theme_bw() +
+  theme(axis.text = element_text(color = "black", size = 12, face = "bold"), 
+        axis.title = element_text(color = "black", size = 14, face = "bold"),
+        plot.title = element_text(color = "black", size = 16, face = "bold")) +
+  guides(fill = guide_legend(title = "Experimento", ncol = 1))
+```
+
+Si bien en la sección de estadísticos de resumen se apreció una disminución de los tiempos conforme avanzaba el experimento, esa diferencia no parece ser contundente según este boxplot. Cada una de las cajas se traslapa fuertemente con las demás lo cuál podría indicar que no existe una diferencia significativa entre los tiempo medios de cada experimento.
+
+Sin embargo, puede apreciarse que los valores fueron menos dispersos en cada corrida experimental según el ancho de las cajas.
+
+```{r, echo = F, fig.cap="Tiempo por Experimento y Género"}
+ggplot(df, aes(x = Experimento, y = Tiempo, fill = Genero)) +
+  geom_boxplot() +
+  labs(title = "Tiempo por Experimento y Género",
+       x = "Experimento",
+       y = "Tiempo",
+       fill = "Género") +
+  theme_bw() +
+  theme(plot.title = element_text(size = 16, face = "bold"),
+        axis.text = element_text(size = 12, face = "bold"),
+        axis.title = element_text(size = 14, face = "bold"),
+        legend.title = element_text(size = 14, face = "bold"),
+        legend.text = element_text(size = 12, face = "bold"))
+```
+
+Según este último boxplot, se puede notar que en todos los experimentos, los hombres fueron aparentemente más rápidos que las mujeres, adicionalmente se aprecia que en general los resultados de los masculinos fueron más consistentes que los resultados de las femeninas; esto resulta completamente congruente con lo obtenido en los estadísticos de resumen.
+
 \section{Ejercicio 6}
 
 Obtenga graficos de linea promedio de acuerdo al genero
 
 **Solución**
 
-```{r}
+```{r, echo=F, fig.cap="Gráfico de curvas promedio por género"}
 ggplot(df, aes(x = Experimento, y = Tiempo, group = ID, color = Genero)) +
   stat_summary(aes(group = Genero, col = Genero),
-               geom = "line", fun = mean, size = 1.2) +
-  labs(title = "Grafico curvas promedio por genero") +
+               geom = "line", fun = mean, linewidth = 1.2) +
+  labs(title = "Gráfico de curvas promedio por género", color = "Género") +
   theme_bw()
 ```
+
+De este gráfico de curvas promedio por género se puede notar que prácticamente en los 3 niveles, los hombres fueron aproximadamente 3.5 segundos más rápidos que las mujeres. Este comportamiento es plausible en cada uno de los experimentos, puesto que las curvas en este punto parecen ser bastante paralelas.
 
 \section{Ejercicio 7}
 
@@ -277,18 +317,19 @@ Obtenga un gráfico de líneas promedio con boxplots de acuerdo al género. Inte
 
 **Solución**
 
-```{r}
+```{r, echo = F, fig.cap="Gráfico de líneas promedio y boxplot"}
 ggplot(df, aes(x = factor(Experimento), y = Tiempo, fill = Genero)) +
   geom_boxplot(alpha = 0.5, position = "identity", width = 0.5) +
   geom_line(alpha = 0) +
-  stat_summary(fun = mean, aes(group = Genero, col = Genero), geom = "line", size = 2)+
+  stat_summary(fun = mean, aes(group = Genero, col = Genero), geom = "line", linewidth = 2)+
   stat_summary(fun = mean, aes(group = Genero, col = Genero), geom = "point",
              size = 2, col = "yellow") +
-  labs(x = "Time") +
+  labs(x = "Experimento", y = "Tiempo", fill = "Género", 
+       title = "Gráfico de líneas promedio y boxplot", col = "Género") +
   theme_bw()
 ```
 
-Claramente existe una diferencia entre los boxplot. Los boxplot de los hombres se encuentran ligeramente por debajo del de las muejeres. indicando que estos caminan mas rapido. Ahora, esto tambien se puede evidenciar al analizar el grafico de medias (puntos amarillos). Esto representa la media de tanto hombres, como mujeres; en cada experimento. De esta forma, la media de los hombres se encuentra debajo de las mujeres.
+De esta figura se puede notar una diferencia aparente. Los boxplot de los hombres se encuentran ligeramente por debajo del de las mujeres, indicando que estos caminan mas rápido. Ahora, esto tambien se puede evidenciar al analizar el grafico de medias (puntos amarillos) el cual refleja un comportamiento similar en cada uno de los experimentos.
 
 \section{Ejercicio 8}
 
@@ -298,17 +339,238 @@ mujeres y hombres?
 
 **Solución**
 
-Parece haber alguna diferencia en los tiempos registrados por mujeres y hombres?
+Después de obtener los estadísticos de resumen y los gráficos planteados, se puede afirmar que hay evidencia fuerte a favor de una diferencia en los tiempos de los hombres y las mujeres. Particularmente hablando, se mostró en cada caso que los hombres fueron aparentemente más rápidos en cada recorrido y que sus intentos fueron más consistentes entre sí.
 
-Despues de realizados los analisis descriptivos, se concluye que en efecto existe una diferencia entre el tiempo que le toma a las mujeres vs a los hombres. 
+\section{Ejercicio 9}
 
-Segun en analisis desciptivo, las mujeres tardan un poco mas que los hombres en recorrer los 35 metros del experimento. Esto basado en que en cada grafico aqui presentado, el tiempo asociado a F > M, lo que implica que las mujeres tardan mas que los hombres. 
+Utilizando la técnica de reducción de dimensionalidad de estadísticos de resumen basada en regresión líneal vista en clase, obtenga para cada persona su intercepto y su pendiente estimados.
 
+**Solución**
 
+\section{Ejercicio 10}
 
+Con base en los parámetros estimados del numeral anterior y una prueba estadística apropiada: ¿observa alguna diferencia en los interceptos? ¿observa alguna diferencia en las pendientes? Interprete.
 
+**Solución**
 
+\section{Anexo: Códigos}
 
+\subsection{Código ejercicio 1}
+```{r eval=F}
+# lectura base de datos
+df <- read_excel("Datos_Experimento_Tiempo_Pasos.xlsx")
+kable(head(df), booktabs = T, align = "c", linesep = "", 
+      caption = "Datos formato ancho") %>% 
+  kable_styling(latex_options = "HOLD_position")
+```
 
+```{r eval=F}
+df <- pivot_longer(data = df, cols = c(3:5), names_to = "Experimento",
+                   values_to = "Tiempo")
+```
 
+```{r eval=F}
+kable(head(df, 12), booktabs = T, align = "c", linesep = "", 
+      caption = "Datos formato largo") %>% 
+  kable_styling(latex_options = "HOLD_position")
+```
 
+\subsection{Código ejercicio 2}
+```{r eval=F}
+
+#Por género
+media_global_hombres <- df %>% filter(Genero == "M") %>% 
+  select(Tiempo) %>% unlist() %>% mean() %>% round(4)
+
+media_global_mujeres <- df %>% filter(Genero == "F") %>% 
+  select(Tiempo) %>% unlist() %>% mean() %>% round(4)
+
+sd_global_hombres <- df %>% filter(Genero == "M") %>% 
+  select(Tiempo) %>% unlist() %>% sd() %>% round(4)
+
+sd_global_mujeres <- df %>% filter(Genero == "F") %>% 
+  select(Tiempo) %>% unlist() %>% sd() %>% round(4)
+
+max_global_hombres <- df %>% filter(Genero == "M") %>% 
+  select(Tiempo) %>% unlist() %>% max() %>% round(4)
+
+max_global_mujeres <- df %>% filter(Genero == "F") %>% 
+  select(Tiempo) %>% unlist() %>% max() %>% round(4)
+
+min_global_hombres <- df %>% filter(Genero == "M") %>% 
+  select(Tiempo) %>% unlist() %>% min() %>% round(4)
+
+min_global_mujeres <- df %>% filter(Genero == "F") %>% 
+  select(Tiempo) %>% unlist() %>% min() %>% round(4)
+
+#Por tiempo
+media_global_t1 <- df %>% filter(Experimento == "T1") %>% 
+  select(Tiempo) %>% unlist() %>% mean() %>% round(4)
+
+media_global_t2 <- df %>% filter(Experimento == "T2") %>% 
+  select(Tiempo) %>% unlist() %>% mean() %>% round(4)
+
+media_global_t3 <- df %>% filter(Experimento == "T3") %>% 
+  select(Tiempo) %>% unlist() %>% mean() %>% round(4)
+
+sd_global_t1 <- df %>% filter(Experimento == "T1") %>% 
+  select(Tiempo) %>% unlist() %>% sd() %>% round(4)
+
+sd_global_t2 <- df %>% filter(Experimento == "T2") %>% 
+  select(Tiempo) %>% unlist() %>% sd() %>% round(4)
+
+sd_global_t3 <- df %>% filter(Experimento == "T3") %>% 
+  select(Tiempo) %>% unlist() %>% sd() %>% round(4)
+
+max_global_t1 <- df %>% filter(Experimento == "T1") %>% 
+  select(Tiempo) %>% unlist() %>% max() %>% round(4)
+
+max_global_t2 <- df %>% filter(Experimento == "T2") %>% 
+  select(Tiempo) %>% unlist() %>% max() %>% round(4)
+
+max_global_t3 <- df %>% filter(Experimento == "T3") %>% 
+  select(Tiempo) %>% unlist() %>% max() %>% round(4)
+
+min_global_t1 <- df %>% filter(Experimento == "T1") %>% 
+  select(Tiempo) %>% unlist() %>% min() %>% round(4)
+
+min_global_t2 <- df %>% filter(Experimento == "T2") %>% 
+  select(Tiempo) %>% unlist() %>% min() %>% round(4)
+
+min_global_t3 <- df %>% filter(Experimento == "T3") %>% 
+  select(Tiempo) %>% unlist() %>% min() %>% round(4)
+
+est_resumen_genero <- data.frame(Minimo = c(min_global_hombres,
+                                            min_global_mujeres),
+                                 Media = c(media_global_hombres,
+                                           media_global_mujeres),
+                                 Desviacion = c(sd_global_hombres,
+                                                sd_global_mujeres),
+                                 Maximo = c(max_global_hombres,
+                                            max_global_mujeres),
+                                 row.names = c("Masculino", "Femenino"))
+
+est_resumen_temp <- data.frame(Minimo = c(min_global_t1,min_global_t2,
+                                          min_global_t3),
+                               Media = c(media_global_t1,media_global_t2,
+                                         media_global_t3),
+                               Desviacion = c(sd_global_t1,sd_global_t2,
+                                              sd_global_t3),
+                               Maximo = c(max_global_t1,max_global_t2,
+                                          max_global_t3),
+                               row.names = c("Tiempo 1", "Tiempo 2", 
+                                             "Tiempo 3"))
+
+kable(est_resumen_genero, caption = "Estadísticos de resumen por género", 
+      booktabs = T, align = "c", linesep = "", 
+      col.names = c("Mínimo", "Media", "Desviación", "Máximo")) %>% 
+  kable_styling(latex_options = "HOLD_position")
+
+kable(est_resumen_temp, caption = "Estadísticos de resumen por tiempos", 
+      booktabs = T, align = "c", linesep = "", 
+      col.names = c("Mínimo", "Media", "Desviación", "Máximo")) %>% 
+  kable_styling(latex_options = "HOLD_position")
+```
+
+\subsection{Código ejercicio 3}
+```{r eval=F}
+ggplot(df, aes(x = Experimento, y = Tiempo, group = ID, 
+               color = factor(ID))) +
+  geom_point() +
+  geom_line() +
+  guides(color = FALSE) +
+  theme(legend.position = "none")+
+  labs(title = "Gráfico de líneas para cada sujeto") +
+  theme_bw()
+```
+
+```{r eval=F}
+ggplot(df, aes(x = Experimento, y = Tiempo, group = ID, color = Genero)) +
+  geom_point() +
+  geom_line()  +
+  labs(title = "Gráfico de spaguetti categorizado por género") +
+  theme_bw()
+```
+
+\subsection{Código ejercicio 4}
+```{r eval=F}
+ggplot(df, aes(x = Experimento, y = Tiempo, group = ID)) +
+  geom_line(aes(color = factor(Genero))) +
+  geom_point(aes(color = factor(Genero)), show.legend = F) +
+  facet_wrap(~ID) +
+  labs(color = "Genero") +
+  theme_bw()
+```
+
+\subsection{Código ejercicio 5}
+```{r eval=F}
+colores = c("#69b3a2", "#404080")
+
+ggplot( data = df, aes(x = Genero, y = Tiempo, fill = Genero))+
+  geom_boxplot(alpha =0.35,
+               size = 1) +
+  stat_summary(fun = mean, geom = "point", shape = 20, size = 4, 
+               color = "red") +
+  scale_fill_manual(values = colores)+
+  labs(x = "Género", y = "Tiempo", title = "Boxplot Género vs Tiempo")+
+  theme_bw() +
+  theme(axis.text = element_text(color = "black", size = 12, face = "bold"), 
+        axis.title = element_text(color = "black", size = 14, face = "bold"),
+        plot.title = element_text(color = "black", size = 16,
+                                  face = "bold")) +
+  guides(fill = guide_legend(title = "Género", ncol = 1))
+```
+
+```{r eval=F}
+ggplot(data = df, aes(x = Experimento, y = Tiempo, fill = Experimento))+
+  geom_boxplot(alpha =0.35,
+               size = 1) +
+  stat_summary(fun = mean, geom = "point", shape = 20, size = 4,
+               color = "red") +
+  labs(x = "Experimento", y = "Tiempo",
+       title = "Boxplot Experimento vs Tiempo")+
+  theme_bw() +
+  theme(axis.text = element_text(color = "black", size = 12, face = "bold"), 
+        axis.title = element_text(color = "black", size = 14, face = "bold"),
+        plot.title = element_text(color = "black", size = 16,
+                                  face = "bold")) +
+  guides(fill = guide_legend(title = "Experimento", ncol = 1))
+```
+
+```{r eval=F}
+ggplot(df, aes(x = Experimento, y = Tiempo, fill = Genero)) +
+  geom_boxplot() +
+  labs(title = "Tiempo por Experimento y Género",
+       x = "Experimento",
+       y = "Tiempo",
+       fill = "Género") +
+  theme_bw() +
+  theme(plot.title = element_text(size = 16, face = "bold"),
+        axis.text = element_text(size = 12, face = "bold"),
+        axis.title = element_text(size = 14, face = "bold"),
+        legend.title = element_text(size = 14, face = "bold"),
+        legend.text = element_text(size = 12, face = "bold"))
+```
+
+\subsection{Código ejercicio 6}
+```{r eval=F}
+ggplot(df, aes(x = Experimento, y = Tiempo, group = ID, color = Genero)) +
+  stat_summary(aes(group = Genero, col = Genero),
+               geom = "line", fun = mean, linewidth = 1.2) +
+  labs(title = "Gráfico de curvas promedio por género", color = "Género") +
+  theme_bw()
+```
+
+\subsection{Código ejercicio 7}
+```{r eval=F}
+ggplot(df, aes(x = factor(Experimento), y = Tiempo, fill = Genero)) +
+  geom_boxplot(alpha = 0.5, position = "identity", width = 0.5) +
+  geom_line(alpha = 0) +
+  stat_summary(fun = mean, aes(group = Genero, col = Genero), geom = "line",
+               linewidth = 2)+
+  stat_summary(fun = mean, aes(group = Genero, col = Genero), geom = "point",
+             size = 2, col = "yellow") +
+  labs(x = "Experimento", y = "Tiempo", fill = "Género", 
+       title = "Gráfico de líneas promedio y boxplot", col = "Género") +
+  theme_bw()
+```
