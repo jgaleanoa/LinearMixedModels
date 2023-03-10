@@ -27,7 +27,7 @@ require(ggplot2)
 ```{r}
 # lectura base de datos
 
-df = read_excel("Datos_Experimento_ Tiempo_Pasos.xlsx")
+df = read_excel("Datos_Experimento_Tiempo_Pasos.xlsx")
 df %>% head() # Correctamente leida la base de datos
 
 ```
@@ -40,7 +40,7 @@ Para ello, note que tenemos los datos generados por formato ancho, para transfor
 
 
 ```{r}
-df =pivot_longer(data = df, cols = c(3:5),names_to = "Experimento",  values_to = "Tiempo")
+df = pivot_longer(data = df, cols = c(3:5), names_to = "Experimento", values_to = "Tiempo")
 attach(df)
 
 ```
@@ -230,14 +230,14 @@ ggplot(df, aes(x = Experimento, y = Tiempo, group = ID)) +
 
 # 6) Obtenga graficos de linea promedio de acuerdo al genero:
 
-
 ```{r}
 ggplot(df, aes(x = Experimento, y = Tiempo, group = ID, color = Genero))+
   stat_summary(aes(group = Genero, col = Genero),
                geom = "line", fun = mean, size = 1.2)+
 labs(title = "Grafico curvas promedio por genero")
 ```
-# 7) Obtenga un gráco de líneas promedio con boxplots de acuerdo al género. Interprete
+
+# 7) Obtenga un gráfico de líneas promedio con boxplots de acuerdo al género. Interprete
 
 ```{r}
 ggplot(df, aes(x=factor(Experimento), y=Tiempo, fill=Genero)) +
